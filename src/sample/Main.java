@@ -14,14 +14,13 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.media.AudioClip;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -35,11 +34,11 @@ public class Main extends Application {
     private Group gameRoot = new Group();
     private ArrayList<Circle> cannonBalls = new ArrayList<Circle>();
 
-    //Images
+    // Images
     private Image cannonsSprite = new Image(new FileInputStream("sprites/cannons.png"));
     private ImageView cannons = new ImageView(cannonsSprite);
 
-    private Image blastSprite = new Image(new FileInputStream("sprites/blast.png"));            //Location of pictures in quotes.
+    private Image blastSprite = new Image(new FileInputStream("sprites/blast.png")); // Location of pictures in quotes.
     private ImageView blast = new ImageView(blastSprite);
 
     private Image manSprite = new Image(new FileInputStream("sprites/man.png"));
@@ -49,13 +48,18 @@ public class Main extends Application {
     private ImageView stock2 = new ImageView(manSprite);
     private ImageView stock3 = new ImageView(manSprite);
 
-    //Audio
-    private AudioClip bang = new AudioClip("file:///C:/Users/jamar/IdeaProjects/RainingBalls/sounds/bang.wav"); //Location of the sound in quotes.
+    // Constant Sizing Variables
+    final Double MAN_SPRITE_WIDTH = manSprite.getWidth();
+    final Double MAN_SPRITE_HEIGHT = manSprite.getHeight();
+
+    // Audio
+    File boomFile = new File("sounds/boom.wav");
+    private AudioClip boom = new AudioClip(boomFile.toURI().toString());
 
     public Main() throws FileNotFoundException {
     }
 
-    private void makeCannonBalls(){
+    private void makeCannonBalls() {
         Random randCannon = new Random();
         Circle cannonBall = new Circle(98, Color.GRAY);
         cannonBalls.add(cannonBall);
@@ -70,115 +74,116 @@ public class Main extends Application {
         }
         cannonBall.setCenterY(260);
         blast.setY(280);
-        bang.play();
+        boom.play();
     }
 
-    public void start(Stage stage) throws Exception{
-        //Setting the Stage
+    public void start(Stage stage) throws Exception {
+        // Setting the Stage
         stage.setTitle("Raining Balls");
         stage.setFullScreen(true);
-
-        //Game Scene
+        
+        // Game Scene
         Scene scene = new Scene(gameRoot, stage.getWidth(), stage.getHeight(), Color.LIGHTBLUE);
         stage.setScene(scene);
+        stage.show();
 
-        //Adding Images
+        // Constant Sizing Variables
+        final Double STAGE_HEIGHT = stage.getHeight();
+        final Double STAGE_WIDTH = stage.getWidth();
 
+        // Adding Images
         gameRoot.getChildren().add(cannons);
 
         gameRoot.getChildren().add(man);
-        man.setX(940);
-        man.setY(960);
+        man.setX(STAGE_WIDTH - STAGE_WIDTH / 2);
+        man.setY(STAGE_HEIGHT - MAN_SPRITE_HEIGHT * 2);
 
         gameRoot.getChildren().add(stock1);
         stock1.setX(0);
-        stock1.setY(1020);
+        stock1.setY(STAGE_HEIGHT - MAN_SPRITE_HEIGHT);
 
         gameRoot.getChildren().add(stock2);
-        stock2.setX(40);
-        stock2.setY(1020);
+        stock2.setX(MAN_SPRITE_WIDTH);
+        stock2.setY(STAGE_HEIGHT - MAN_SPRITE_HEIGHT);
 
         gameRoot.getChildren().add(stock3);
-        stock3.setX(80);
-        stock3.setY(1020);
+        stock3.setX(MAN_SPRITE_WIDTH * 2);
+        stock3.setY(STAGE_HEIGHT - MAN_SPRITE_HEIGHT);
 
-        //Creating the Animation Timer
-        new AnimationTimer(){
+        // Creating the Animation Timer
+        new AnimationTimer() {
             public void handle(long now) {
-                //Moving
-                if(moveRight){
-                    if(man.getX() < stage.getWidth() - 40) {
+                // Moving
+                if (moveRight) {
+                    if (man.getX() < STAGE_WIDTH - 40) {
                         man.setX(man.getX() + 15);
                     }
                 }
-                if(moveLeft){
-                    if(man.getX() > 0) {
+                if (moveLeft) {
+                    if (man.getX() > 0) {
                         man.setX(man.getX() - 15);
                     }
                 }
 
-                //Spawning Balls
-                if(now % 10 == 0){
-                        makeCannonBalls();
+                // Spawning Balls
+                if (now % 10 == 0) {
+                    makeCannonBalls();
                 }
 
-                //Balls Falling
+                // Balls Falling
                 for (Circle cannonBall : cannonBalls) {
-                        cannonBall.setCenterY(cannonBall.getCenterY() + 15);
-                    }
+                    cannonBall.setCenterY(cannonBall.getCenterY() + 15);
+                }
 
-                 //Ball Limits
-                for(int i = 0; i < cannonBalls.size(); i++){
-                    if(cannonBalls.get(i).getCenterY() > stage.getHeight() - 145) {
+                // Ball Limits
+                for (int i = 0; i < cannonBalls.size(); i++) {
+                    if (cannonBalls.get(i).getCenterY() > STAGE_HEIGHT - 145) {
                         gameRoot.getChildren().remove(cannonBalls.get(i));
                         cannonBalls.remove(cannonBalls.get(i));
                     }
                 }
 
-                //Getting Hit
-                for(int i = 0; i < cannonBalls.size(); i++) {
-                    if (man.intersects(cannonBalls.get(i).getLayoutBounds())){
+                // Getting Hit
+                for (int i = 0; i < cannonBalls.size(); i++) {
+                    if (man.intersects(cannonBalls.get(i).getLayoutBounds())) {
                         man.setX(940);
 
-                        //Lose Stock
-                        if(!loseStock3) {
+                        // Lose Stock
+                        if (!loseStock3) {
                             gameRoot.getChildren().remove(stock3);
                             loseStock3 = true;
-                        }
-                        else if(!loseStock2) {
+                        } else if (!loseStock2) {
                             gameRoot.getChildren().remove(stock2);
                             loseStock2 = true;
-                        }
-                        else if(!loseStock1) {
+                        } else if (!loseStock1) {
                             gameRoot.getChildren().remove(stock1);
                             loseStock1 = true;
                             stage.close();
                         }
 
-                        //Remove Balls
-                        for(Circle cannonBall: cannonBalls){
+                        // Remove Balls
+                        for (Circle cannonBall : cannonBalls) {
                             gameRoot.getChildren().remove(cannonBall);
                         }
                         cannonBalls = new ArrayList<Circle>();
                     }
                 }
 
-                //Cannons Layer Fix
+                // Cannons Layer Fix
                 gameRoot.getChildren().remove(cannons);
                 gameRoot.getChildren().add(cannons);
             }
 
-
         }.start();
 
-        //Key event booleans
+        // Key event booleans
         EventHandler<KeyEvent> manKeyDown = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                if(event.getCode() == KeyCode.RIGHT){
+                if (event.getCode() == KeyCode.RIGHT) {
                     moveRight = true;
                 }
-                if(event.getCode() == KeyCode.LEFT){
+                if (event.getCode() == KeyCode.LEFT) {
                     moveLeft = true;
                 }
 
@@ -187,23 +192,19 @@ public class Main extends Application {
         EventHandler<KeyEvent> manKeyUp = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                if(event.getCode() == KeyCode.RIGHT){
+                if (event.getCode() == KeyCode.RIGHT) {
                     moveRight = false;
                 }
-                if(event.getCode() == KeyCode.LEFT){
+                if (event.getCode() == KeyCode.LEFT) {
                     moveLeft = false;
                 }
             }
         };
         scene.addEventHandler(KeyEvent.KEY_PRESSED, manKeyDown);
         scene.addEventHandler(KeyEvent.KEY_RELEASED, manKeyUp);
-
-
-
-        stage.show();
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         launch(args);
     }
 }

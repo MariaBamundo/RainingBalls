@@ -1,0 +1,16 @@
+# Mac OS generated files
+.DS_Store
+
+# Build output directies
+build
+
+# IntelliJ specific files/directories
+out
+.idea
+*.ipr
+*.iws
+*.iml
+*.ids
+
+#VSCode Files
+.VSCode
